@@ -1,0 +1,154 @@
+---
+title: <span style="color:#034a94">**Experiencia**
+author: " "
+institute: " "
+date: " "
+output: 
+  xaringan::moon_reader:
+    css: [rutgers-fonts, "styles.css"]
+    lib_dir: libs
+    nature:
+      highlightStyle: arta
+      highlightLines: true
+      countIncrementalSlides: false
+
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+
+c1="034a94" #color naranja-primario
+c2="FF7F00" #color azul oscuro-secundario
+c3="0EB0C6" #color azul claro-terciario
+c4="-686868" #color gris-texto
+```
+
+## <span style="color:#FF7F00"> **Proceso Aleatorio**
+
+Un proceso aleatorio es estacionario si sus propiedades estadísticas permanecen constantes en el
+tiempo.
+
+Esta hipótesis es fundamental ya que con frecuencia tenemos la realización de un proceso estocástico y a partir de estas podemos hacer inferencia, así que con la estacionariedad podemos aprender de las propiedades del fenómeno de interés, al observarlo en un período de tiempo lo suficientemente largo.
+
+## <span style="color:#FF7F00"> **Definición**
+
+Sea $X_t$, $t\in T$ un proceso aleatorio.  Es (estrictamente) estacionario si dado $n\in\mathbb{N}$, $h\in \mathbb{R}$, los procesos $(X(t_1),X(t_2),\ldots, X(t_n))$ y $(X(t_{1+h}),X(t_{2+h}),\ldots, X(t_{n+h}))$ 
+tienen la misma distribución.
+
+En la práctica esta condición es imposible de verificar ya que necesitaríamos conocer todas las distribuciones finito dimensionales. Por tanto, necesitamos una condición más débil.
+
+
+
+---
+
+### <span style="color:#FF7F00"> **Proceso débilmente estacionario**
+
+Sea $X(t)$, $t\in T$ un proceso con segundo momento finito. Decimos que es débilmente estacionario si 
+
+- $\mu_{X}(t)=E(X(t))=\mu$, $\forall t\in T$
+- $\gamma_{X}(s,t)=\gamma_{X}(s-t)$
+
+Además, $$\gamma_{X}(h)=E(X(t+h)-\mu)(X(t)-\mu)),\quad h\in\mathbb{R}$$
+
+La función autocorrelación (ACF) se define como $$\rho_{X}(h)=\frac{\gamma_{X}(h)}{\gamma_{X}(0)}.$$		
+
+A continuación, presentamos algunos ejemplos de series de tiempo, definidas teóricamente. Más adelante, las veremos en la práctica.
+
+---
+	
+### <span style="color:#0EB0C6"> ** Ruido i.i.d.**
+
+Sea $X_{t}$, $t\geq 1$ una sucesión de v.a.i.i.d. con media $0$ y varianza $\sigma^2,$ 	donde
+- $E(X_{t})=0$
+- $\gamma(t,t+h)=\sigma^2$ si $h= 0$ y es igual a cero en caso contrario.
+
+### <span style="color:#0EB0C6"> **Ruido blanco**
+
+En este caso las variables $X_{n}$, $n\geq 1$ no son independientes así que no están correlacionadas. Sin embargo,
+- $E(X_{t})=0$
+- $\gamma(t,t+h)=\sigma^2$ si $h= 0$ y es igual a cero en caso contrario.
+
+Notación: Ruido blanco $\omega_t$
+
+---
+
+### <span style="color:#0EB0C6"> **Promedio móvil**
+
+Sea $$\nu_{t}=\frac{1}{3}\left(\omega_{t-1}+\omega_{t}+\omega_{t+1}\right)$$
+
+- $E(\nu_t)=0$
+- $\gamma(t,t)= \frac{3}{9}\sigma_{\omega}^{2}$
+- $\gamma(t,t+h)= \frac{2}{9}\sigma_{\omega}^{2}$, si $\vert h\vert = 1$.
+- $\gamma(t,t+h)= \frac{1}{9}\sigma_{\omega}^{2}$, si $\vert h\vert = 2$ y es cero si $\vert h\vert >2.$
+   
+### <span style="color:#0EB0C6"> ** Caminata aleatoria con deriva**
+
+Sea $$X_{t}=\delta t+\sum^{t}_{j=1}\omega_{j},\quad \delta\in \mathbb{R}$$
+- $E(X_{t})=\delta t$
+- $\gamma(s,t)=\min\{s,t\}\sigma_{\omega}^{2.}$
+
+Observación: No es estacionario, además, $Var(X(t))=\sigma_{\omega}^{2}$ 
+
+---
+
+# <span style="color:#034a94"> **ARIMA**
+
+A continuación presentamos uno de los modelos más utilizados en las series de tiempo. 
+
+El proceso $X_{t}$  se dice que es un proceso autoregresivo integrado de medias móviles $ARIMA(p,d,q)$ si su diferencia $\Delta^{d}X$ es un proceso $ARMA(p,q)$.
+
+Un modelo $ARIMA(p,d,q)$ se puede escribir como 
+$$\phi_{\alpha}(B)\Delta^{d}X=\theta_{\beta}(B)\epsilon$$
+ó 
+
+$$\phi_{\alpha}(B)\left(\mathbb{I}-B\right)^{d}X=\theta_{\beta}(B)\epsilon$$
+Si combinamos la diferenciación con la autoregresión y el promedio móvil, obtenemos el no-estacional modelo ARIMA.  ARIMA es un acrónimo para autoregresivo e integrado promedio móvil (en este contexto, “integración” es lo contrario de diferenciación). 
+
+---
+
+##<span style="color:#0EB0C6"> ** Funciones de autocovarianza y autocorrelación**
+La ACF y PACF se pueden calcular en general, ver, algunos caso particulares son: 
+
+En el modelo $MA(q)$ tenemos que 
+$$\gamma_{h}=\sigma^{2}\sum^{q-\vert h \vert}_{t=0}\beta_{t}\beta_{t+\vert h\vert},\quad\quad \vert h \vert\leq q$$
+y ceros en otros casos.
+
+
+En el modelo $AR(p)$ tenemos que 
+
+$$\gamma_{h}=\sum^{p}_{i=1}\alpha_{i}\gamma_{h-i}.$$		
+
+---
+
+## <span style="color:#FF7F00"> **Metodología Box-Jenkins**
+
+En honor a los estadísticos George E. P. Box y Gwilym Jenkins (1973),
+se aplica a los modelos autorregresivos de media móvil **ARMA** o a los modelos autorregresivos integrados de media móvil **ARIMA** para encontrar el mejor ajuste de una serie temporal con el fin de que los pronósticos sean más acertados.
+
+Dentro de los pasos a seguir, tenemos 
+
+- Visualizar la serie.
+- Transformarla en estacionaria.
+- Graficar ACF - PACF, escoger los parámetros.
+- Construir el modelo.
+- Hacer predicción.
+
+---
+
+## <span style="color:#FF7F00"> **Invertibilidad y/o causalidad**
+
+Dentro de los problemas que se presentan en procesos estacionarios como el ARIMA tenemos
+
+- Modelos sobreparametrizados
+- Modelos estacionarios que dependen del futuro
+- Modelos de promedio móvil que no son únicos.
+
+## <span style="color:#FF7F00"> **Estacionales vs No estacionales**
+
+Hasta ahora, hemos restringido nuestra atención en modelos ARIMA no estacionales. Sin embargo, los modelos ARIMA también son capaces de modelar una amplia gama de datos estacionales.
+
+Un modelo ARIMA estacional se forma al incluir términos estacionales adicionales en los modelos ARIMA y se escribe como
+
+$$ ARIMA =(p,d,q) (P,D,Q)_{m}$$
+
+el período estacional (por ejemplo, número de observaciones por año). Usamos notación en mayúsculas para las partes estacionales del modelo y en minúsculas para las partes no estacionales del modelo.

@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="" xml:lang="">
+  <head>
+    <title>Experiencia</title>
+    <meta charset="utf-8" />
+    <meta name="author" content="" />
+    <script src="libs/header-attrs-2.17/header-attrs.js"></script>
+    <link href="libs/remark-css-0.0.1/rutgers-fonts.css" rel="stylesheet" />
+    <link rel="stylesheet" href="styles.css" type="text/css" />
+  </head>
+  <body>
+    <textarea id="source">
+class: center, middle, inverse, title-slide
+
+.title[
+# <span style="color:#034a94"><strong>Experiencia</strong>
+]
+.author[
+### 
+]
+
+---
+
+
+
+
+## &lt;span style="color:#FF7F00"&gt; **Proceso Aleatorio**
+
+Un proceso aleatorio es estacionario si sus propiedades estadísticas permanecen constantes en el
+tiempo.
+
+Esta hipótesis es fundamental ya que con frecuencia tenemos la realización de un proceso estocástico y a partir de estas podemos hacer inferencia, así que con la estacionariedad podemos aprender de las propiedades del fenómeno de interés, al observarlo en un período de tiempo lo suficientemente largo.
+
+## &lt;span style="color:#FF7F00"&gt; **Definición**
+
+Sea `\(X_t\)`, `\(t\in T\)` un proceso aleatorio.  Es (estrictamente) estacionario si dado `\(n\in\mathbb{N}\)`, `\(h\in \mathbb{R}\)`, los procesos `\((X(t_1),X(t_2),\ldots, X(t_n))\)` y `\((X(t_{1+h}),X(t_{2+h}),\ldots, X(t_{n+h}))\)` 
+tienen la misma distribución.
+
+En la práctica esta condición es imposible de verificar ya que necesitaríamos conocer todas las distribuciones finito dimensionales. Por tanto, necesitamos una condición más débil.
+
+
+
+---
+
+### &lt;span style="color:#FF7F00"&gt; **Proceso débilmente estacionario**
+
+Sea `\(X(t)\)`, `\(t\in T\)` un proceso con segundo momento finito. Decimos que es débilmente estacionario si 
+
+- `\(\mu_{X}(t)=E(X(t))=\mu\)`, `\(\forall t\in T\)`
+- `\(\gamma_{X}(s,t)=\gamma_{X}(s-t)\)`
+
+Además, `$$\gamma_{X}(h)=E(X(t+h)-\mu)(X(t)-\mu)),\quad h\in\mathbb{R}$$`
+
+La función autocorrelación (ACF) se define como `$$\rho_{X}(h)=\frac{\gamma_{X}(h)}{\gamma_{X}(0)}.$$`		
+
+A continuación, presentamos algunos ejemplos de series de tiempo, definidas teóricamente. Más adelante, las veremos en la práctica.
+
+---
+	
+### &lt;span style="color:#0EB0C6"&gt; ** Ruido i.i.d.**
+
+Sea `\(X_{t}\)`, `\(t\geq 1\)` una sucesión de v.a.i.i.d. con media `\(0\)` y varianza `\(\sigma^2,\)` 	donde
+- `\(E(X_{t})=0\)`
+- `\(\gamma(t,t+h)=\sigma^2\)` si `\(h= 0\)` y es igual a cero en caso contrario.
+
+### &lt;span style="color:#0EB0C6"&gt; **Ruido blanco**
+
+En este caso las variables `\(X_{n}\)`, `\(n\geq 1\)` no son independientes así que no están correlacionadas. Sin embargo,
+- `\(E(X_{t})=0\)`
+- `\(\gamma(t,t+h)=\sigma^2\)` si `\(h= 0\)` y es igual a cero en caso contrario.
+
+Notación: Ruido blanco `\(\omega_t\)`
+
+---
+
+### &lt;span style="color:#0EB0C6"&gt; **Promedio móvil**
+
+Sea `$$\nu_{t}=\frac{1}{3}\left(\omega_{t-1}+\omega_{t}+\omega_{t+1}\right)$$`
+
+- `\(E(\nu_t)=0\)`
+- `\(\gamma(t,t)= \frac{3}{9}\sigma_{\omega}^{2}\)`
+- `\(\gamma(t,t+h)= \frac{2}{9}\sigma_{\omega}^{2}\)`, si `\(\vert h\vert = 1\)`.
+- `\(\gamma(t,t+h)= \frac{1}{9}\sigma_{\omega}^{2}\)`, si `\(\vert h\vert = 2\)` y es cero si `\(\vert h\vert &gt;2.\)`
+   
+### &lt;span style="color:#0EB0C6"&gt; ** Caminata aleatoria con deriva**
+
+Sea `$$X_{t}=\delta t+\sum^{t}_{j=1}\omega_{j},\quad \delta\in \mathbb{R}$$`
+- `\(E(X_{t})=\delta t\)`
+- `\(\gamma(s,t)=\min\{s,t\}\sigma_{\omega}^{2.}\)`
+
+Observación: No es estacionario, además, `\(Var(X(t))=\sigma_{\omega}^{2}\)` 
+
+---
+
+# &lt;span style="color:#034a94"&gt; **ARIMA**
+
+A continuación presentamos uno de los modelos más utilizados en las series de tiempo. 
+
+El proceso `\(X_{t}\)`  se dice que es un proceso autoregresivo integrado de medias móviles `\(ARIMA(p,d,q)\)` si su diferencia `\(\Delta^{d}X\)` es un proceso `\(ARMA(p,q)\)`.
+
+Un modelo `\(ARIMA(p,d,q)\)` se puede escribir como 
+`$$\phi_{\alpha}(B)\Delta^{d}X=\theta_{\beta}(B)\epsilon$$`
+ó 
+
+`$$\phi_{\alpha}(B)\left(\mathbb{I}-B\right)^{d}X=\theta_{\beta}(B)\epsilon$$`
+Si combinamos la diferenciación con la autoregresión y el promedio móvil, obtenemos el no-estacional modelo ARIMA.  ARIMA es un acrónimo para autoregresivo e integrado promedio móvil (en este contexto, “integración” es lo contrario de diferenciación). 
+
+---
+
+##&lt;span style="color:#0EB0C6"&gt; ** Funciones de autocovarianza y autocorrelación**
+La ACF y PACF se pueden calcular en general, ver, algunos caso particulares son: 
+
+En el modelo `\(MA(q)\)` tenemos que 
+`$$\gamma_{h}=\sigma^{2}\sum^{q-\vert h \vert}_{t=0}\beta_{t}\beta_{t+\vert h\vert},\quad\quad \vert h \vert\leq q$$`
+y ceros en otros casos.
+
+
+En el modelo `\(AR(p)\)` tenemos que 
+
+`$$\gamma_{h}=\sum^{p}_{i=1}\alpha_{i}\gamma_{h-i}.$$`		
+
+---
+
+## &lt;span style="color:#FF7F00"&gt; **Metodología Box-Jenkins**
+
+En honor a los estadísticos George E. P. Box y Gwilym Jenkins (1973),
+se aplica a los modelos autorregresivos de media móvil **ARMA** o a los modelos autorregresivos integrados de media móvil **ARIMA** para encontrar el mejor ajuste de una serie temporal con el fin de que los pronósticos sean más acertados.
+
+Dentro de los pasos a seguir, tenemos 
+
+- Visualizar la serie.
+- Transformarla en estacionaria.
+- Graficar ACF - PACF, escoger los parámetros.
+- Construir el modelo.
+- Hacer predicción.
+
+---
+
+## &lt;span style="color:#FF7F00"&gt; **Invertibilidad y/o causalidad**
+
+Dentro de los problemas que se presentan en procesos estacionarios como el ARIMA tenemos
+
+- Modelos sobreparametrizados
+- Modelos estacionarios que dependen del futuro
+- Modelos de promedio móvil que no son únicos.
+
+## &lt;span style="color:#FF7F00"&gt; **Estacionales vs No estacionales**
+
+Hasta ahora, hemos restringido nuestra atención en modelos ARIMA no estacionales. Sin embargo, los modelos ARIMA también son capaces de modelar una amplia gama de datos estacionales.
+
+Un modelo ARIMA estacional se forma al incluir términos estacionales adicionales en los modelos ARIMA y se escribe como
+
+$$ ARIMA =(p,d,q) (P,D,Q)_{m}$$
+
+el período estacional (por ejemplo, número de observaciones por año). Usamos notación en mayúsculas para las partes estacionales del modelo y en minúsculas para las partes no estacionales del modelo.
+    </textarea>
+<style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
+<script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+<script>var slideshow = remark.create({
+"highlightStyle": "arta",
+"highlightLines": true,
+"countIncrementalSlides": false
+});
+if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
+  window.dispatchEvent(new Event('resize'));
+});
+(function(d) {
+  var s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+  if (!r) return;
+  s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
+  d.head.appendChild(s);
+})(document);
+
+(function(d) {
+  var el = d.getElementsByClassName("remark-slides-area");
+  if (!el) return;
+  var slide, slides = slideshow.getSlides(), els = el[0].children;
+  for (var i = 1; i < slides.length; i++) {
+    slide = slides[i];
+    if (slide.properties.continued === "true" || slide.properties.count === "false") {
+      els[i - 1].className += ' has-continuation';
+    }
+  }
+  var s = d.createElement("style");
+  s.type = "text/css"; s.innerHTML = "@media print { .has-continuation { display: none; } }";
+  d.head.appendChild(s);
+})(document);
+// delete the temporary CSS (for displaying all slides initially) when the user
+// starts to view slides
+(function() {
+  var deleted = false;
+  slideshow.on('beforeShowSlide', function(slide) {
+    if (deleted) return;
+    var sheets = document.styleSheets, node;
+    for (var i = 0; i < sheets.length; i++) {
+      node = sheets[i].ownerNode;
+      if (node.dataset["target"] !== "print-only") continue;
+      node.parentNode.removeChild(node);
+    }
+    deleted = true;
+  });
+})();
+// add `data-at-shortcutkeys` attribute to <body> to resolve conflicts with JAWS
+// screen reader (see PR #262)
+(function(d) {
+  let res = {};
+  d.querySelectorAll('.remark-help-content table tr').forEach(tr => {
+    const t = tr.querySelector('td:nth-child(2)').innerText;
+    tr.querySelectorAll('td:first-child .key').forEach(key => {
+      const k = key.innerText;
+      if (/^[a-z]$/.test(k)) res[k] = t;  // must be a single letter (key)
+    });
+  });
+  d.body.setAttribute('data-at-shortcutkeys', JSON.stringify(res));
+})(document);
+(function() {
+  "use strict"
+  // Replace <script> tags in slides area to make them executable
+  var scripts = document.querySelectorAll(
+    '.remark-slides-area .remark-slide-container script'
+  );
+  if (!scripts.length) return;
+  for (var i = 0; i < scripts.length; i++) {
+    var s = document.createElement('script');
+    var code = document.createTextNode(scripts[i].textContent);
+    s.appendChild(code);
+    var scriptAttrs = scripts[i].attributes;
+    for (var j = 0; j < scriptAttrs.length; j++) {
+      s.setAttribute(scriptAttrs[j].name, scriptAttrs[j].value);
+    }
+    scripts[i].parentElement.replaceChild(s, scripts[i]);
+  }
+})();
+(function() {
+  var links = document.getElementsByTagName('a');
+  for (var i = 0; i < links.length; i++) {
+    if (/^(https?:)?\/\//.test(links[i].getAttribute('href'))) {
+      links[i].target = '_blank';
+    }
+  }
+})();
+// adds .remark-code-has-line-highlighted class to <pre> parent elements
+// of code chunks containing highlighted lines with class .remark-code-line-highlighted
+(function(d) {
+  const hlines = d.querySelectorAll('.remark-code-line-highlighted');
+  const preParents = [];
+  const findPreParent = function(line, p = 0) {
+    if (p > 1) return null; // traverse up no further than grandparent
+    const el = line.parentElement;
+    return el.tagName === "PRE" ? el : findPreParent(el, ++p);
+  };
+
+  for (let line of hlines) {
+    let pre = findPreParent(line);
+    if (pre && !preParents.includes(pre)) preParents.push(pre);
+  }
+  preParents.forEach(p => p.classList.add("remark-code-has-line-highlighted"));
+})(document);</script>
+
+<script>
+slideshow._releaseMath = function(el) {
+  var i, text, code, codes = el.getElementsByTagName('code');
+  for (i = 0; i < codes.length;) {
+    code = codes[i];
+    if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
+      text = code.textContent;
+      if (/^\\\((.|\s)+\\\)$/.test(text) || /^\\\[(.|\s)+\\\]$/.test(text) ||
+          /^\$\$(.|\s)+\$\$$/.test(text) ||
+          /^\\begin\{([^}]+)\}(.|\s)+\\end\{[^}]+\}$/.test(text)) {
+        code.outerHTML = code.innerHTML;  // remove <code></code>
+        continue;
+      }
+    }
+    i++;
+  }
+};
+slideshow._releaseMath(document);
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>

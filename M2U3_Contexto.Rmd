@@ -1,0 +1,104 @@
+---
+title: <span style="color:#FF7F00">**Contexto**
+author: " "
+date: " "
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+c1="034a94" #color naranja-primario
+c2="FF7F00" #color azul oscuro-secundario
+c3="0EB0C6" #color azul claro-terciario
+c4="-686868" #color gris-texto
+```
+
+## <span style="color:#034a94"> **Regresión en series de tiempo**
+
+En regresión, cuando estimamos los parámetros del modelo, necesitamos minimizar la suma de cuadrados y pueden surgir varios problemas.  Así que en este contexto, una consideración importante al estimar una regresión con errores ARMA es que todas las variables del modelo primero deben ser **estacionarias**.  
+
+Si estimamos el modelo cuando cualquiera de estos no es estacionario, los coeficientes estimados no serán estimaciones consistentes (y por lo tanto pueden no ser significativos). Una excepción a esto es el caso donde las variables no estacionarias están cointegradas. 
+
+Por lo tanto, primero diferenciamos las variables no estacionarias en el modelo. y el modelo resultante se denomina entonces “modelo en diferencias”, a diferencia de un “modelo en niveles”, que es el que se obtiene cuando se utilizan los datos originales sin diferenciar.
+
+Si todas las variables en el modelo son estacionarias, entonces solo necesitamos considerar un proceso ARMA para los errores. Es fácil ver que un modelo de regresión con errores ARIMA es equivalente a un modelo de regresión en diferencias con errores ARMA. Por ejemplo, si se diferencia el modelo de regresión anterior con errores $ARIMA(1,1,1)$, obtenemos el modelo
+
+$$y'_t=\beta_{1}x'_{1,t}+\ldots+\beta_{k}x'_{k,t}+\eta'_{t}$$
+con
+$$(1-\phi_{1}B)\eta'_{t}=(1+\theta_{1}B)\epsilon_{t}$$
+donde $y'_{t}=y_{t}-y_{t-1},$ $x'_{t,i}=x_{t,i}-x_{t-1,i}$ y $\eta'_{t}=\eta_{t}-\eta_{t-1}$
+el cual es un modleo de regresión en diferencias con errores ARMA.
+
+En esta unidad, estaremos abordando la estimación y pronóstico a través de esta estructura.
+
+# <span style="color:#FF7F00"> **Datos**
+
+```{r}
+library(ggplot2)
+library(fpp3)
+data(us_change)
+View(us_change)
+```
+
+La gráfica nos muestra los cambios trimestrales en el gasto de consumo personal y el ingreso disponible personal desde 1970 hasta el segundo trimestre de 2019. Nos gustaría pronosticar cambios en los gastos basados en cambios en los ingresos. Un cambio en los ingresos no se traduce necesariamente en un cambio instantáneo en el consumo (por ejemplo, después de la pérdida de un trabajo, pueden pasar algunos meses antes de que los gastos se reduzcan para adaptarse a las nuevas circunstancias). Sin embargo, ignoraremos esta complejidad en este ejemplo e intentaremos medir el efecto instantáneo del cambio promedio del ingreso sobre el cambio promedio del gasto de consumo. 
+
+```{r}
+us_change %>%
+  pivot_longer(c(Consumption, Income),
+               names_to = "var", values_to = "value") %>%
+  ggplot(aes(x = Quarter, y = value)) +
+  geom_line() +
+  facet_grid(vars(var), scales = "free_y") +
+  labs(title = "US consumption and personal income",
+       y = "Quarterly % change")
+```
+Ajustamos un modelo
+
+```{r}
+fit <- us_change %>%
+  model(ARIMA(Consumption ~ Income))
+report(fit)
+```
+Los datos ya son claramente estacionarios (ya que estamos considerando cambios porcentuales en lugar de gastos e ingresos brutos), por lo que no hay necesidad de diferenciarlos. El modelo ajustado es 
+
+$$y_{t}=0.595+0.198x_{t}+\eta_{t},$$
+con $\eta_{t}=0.707\eta_{t-1}+\epsilon_{t}-0.617\epsilon_{t-1}+0.207\epsilon_{t-2}$ y $\epsilon_{t}\sim iid N(0,0.311).$
+
+Ahora, evaluemos los residuos
+```{r}
+bind_rows(
+    `Regression residuals` =
+        as_tibble(residuals(fit, type = "regression")),
+    `ARIMA residuals` =
+        as_tibble(residuals(fit, type = "innovation")),
+    .id = "type"
+  ) %>%
+  mutate(
+    type = factor(type, levels=c(
+      "Regression residuals", "ARIMA residuals"))
+  ) %>%
+  ggplot(aes(x = Quarter, y = .resid)) +
+  geom_line() +
+  facet_grid(vars(type))
+```
+```{r}
+fit %>% gg_tsresiduals()
+augment(fit) %>%
+  features(.innov, ljung_box, dof = 5, lag = 8)
+```
+
+Los cuales muestran un comportamiento de ruido blanco.
+
+### <span style="color:#034a94"> **Predicción**
+
+También, podemos predecir, con base en la ecuación dada
+
+```{r}
+us_change_future <- new_data(us_change, 8) %>%
+  mutate(Income = mean(us_change$Income))
+forecast(fit, new_data = us_change_future) %>%
+  autoplot(us_change) +
+  labs(y = "Percentage change")
+```
+

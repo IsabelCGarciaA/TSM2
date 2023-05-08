@@ -1,0 +1,214 @@
+---
+title: <span style="color:#034a94">**Experiencia**
+author: " "
+date: " "
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# <span style="color:#FF7F00">**Modelo Holt - Winters**
+
+En algunos modelos como el modelo híbrido con Loess (ver),  la tendencia y la estacionalidad son modelos paramétricos globales, lo que quiere decir
+que sus parámetros no cambian con $t$, para introducir una mayor flexibilidad a nuestros modelos, se pueden permitir parámetros variables con $t$
+
+$$X_t=\beta_{0,t}+\beta_{1,t}t+\sum^{s}_{j=1}\delta_{j,t}I_{j}(t)+\epsilon_{t},$$
+donde $I(\cdot)$ denota componentes indicadoras y los parámetros se asume que varían de acuerdo a caminatas aleatorias definidas así
+
+$$\beta_{0,t}=\beta_{0,t-1}+\epsilon_{\beta_{0},t},\quad
+\beta_{1,t}=\beta_{1,t-1}+\epsilon_{\beta_{1},t},\quad
+\delta_{j,t}=\delta_{j,t-1}+\epsilon_{\delta_{j},t}$$
+siendo 
+
+$\epsilon_{\beta_{0},t}\sim iid\mathcal{N}(0,\sigma^{2}_{\beta_{0}})$, $\epsilon_{\beta_{1},t}\sim iid\mathcal{N}(0,\sigma^{2}_{\beta_{1}})$ y
+$\epsilon_{\delta_{j,t}}\sim iid\mathcal{N}(0,\sigma^{2}_{\delta_{j}})$
+variables aleatorias independientes e igualmente distribuídas (iid) Normales.  Se dice que los parámetros **varían lentamente**.  El modelo del Holt-Winters es un algortimo para estimar recursivamente las cantidades
+
+$$\mu_t=\beta_{0,t},\quad \beta_{t}=\beta_{1,t}t,\quad
+S_{t}=\sum^{s}_{j=1}\delta_{j,t}I_{j}(t)$$
+a partir de unos valores iniciales $\mu_{0},\beta_{0},S_{0,j}=\delta_{j,0}$, $j=1,2\ldots,s.$
+
+## <span style="color:#FF7F00">**Definición**
+
+El algoritmo Holt-Winters consiste en el sistema de ecuaciones recursivas para 
+$\mu_{t}$, $\beta_{t}$ y $S_{t},$ dado por 
+
+$$\mu_t=\alpha (Y_{t}-S_{t-s})+(1-\alpha) (\mu_{t-1}+\beta_{t-1}),$$
+$$\beta_{t}=\beta(\mu_{t}-\mu_{t-1})+(1-\beta)\beta_{t-1},$$
+$$
+S_{t}=\gamma(X_{t}-\mu_{t})+(1-\gamma)S_{t-s},$$
+donde $t=2,\ldots,T.$
+
+Las constantes $\alpha,\beta,\gamma \in (0,1)$ son los paraámetros de suavizamiento (tunnig parameters) y se escoge de forma que minimicen el MSE, o a veces de forma empírica.  
+
+"Si las componentes de tendencia y estacionalidad cambian rápidamente, las constantes $\alpha_{j}$ deben tomarse cercanas a $1$ o si las componentes son estables y varían lentamente, se escogen cercanas a $0.$", ver Abraham.
+
+Los valores iniciales se toman como los parámetros estiamdos de las regresiones 
+
+$$X_{t}=\sum^{s}_{j=1}\delta_{j,t}I_{j}(t)+\epsilon_{t}+\epsilon_{t},\quad
+\hat{\epsilon}_{t}=\beta_{0}+\beta_{1}t+\eta_{t},\; t=1,\ldots,T$$
+
+es decir, $S_{0,j}=\hat{\delta}_{j}$, $\beta_{0}=\hat{\beta}_{1}$ y $\mu_{0}=\hat{\beta}_{0}+\hat{\beta}_{1}.$. 
+
+
+El valor suavizado de la serie en $t=1,2,\ldots,T$ es 
+
+$$\hat{X}_{t}=\mu_{t}+\beta_{t}+S_{t}.$$
+y el pronóstico para un horizonte $j=1,2,\ldots,m$ es 
+
+$$\hat{X}_{t+j}=(\mu_{T}+j\beta_{T})+S_{T=s+j}.$$
+“El procedimiento Holt-Winters está considerado como una aproximación
+a un filtro de Kalman aplicado al modelo de componentes; el por qué algunos
+continúan utilizándolo es algo misterioso. Discusiones adicionales sobre diferentes formas de las recursiones aditiva y multiplicativas Holt-Winters se pueden encontrar en Ord, Koehler and Snyder (1997)”.
+
+La programación en R del método Holt-Winters se puede hacer de manera que se estiman las
+constantes $\alpha$, $\beta$, $\gamma$ automáticamente, como los valores que minimizan el MSE. O también,
+se puede ingresar un valor particular para cada constante.  ddao que nosotros estamos empelando métodos cuantitaivos, usaremos la función desde R.
+
+## <span style="color:#FF7F00">**Datos en TSA**
+
+Este conjunto de datos, pertenece al paquete TS <https://cran.r-project.org/web/packages/TSA/TSA.pdf>.
+Este paquete de R, contiene funciones y conjuntos de datos relacionados en el libro "Time Series Analysis with Applications in R (second edition)" by J.D. Cryer and K.S. Chan.
+
+A continuación, realizaremos el suavizamiento exponencial, el promedio móvil y Holter-Winter en el conjunto de datos airmiles: Monthly Airline Passenger-Miles en US. La ventana de observación está entre 01/1996 - 05/2005. 
+
+```{r}
+library(TSA)
+data("airmiles")
+View(airmiles)
+plot(airmiles)
+str(airmiles)
+```
+
+Verificamos catacterísticas básicas de los datos.
+
+```{r}
+class(airmiles)
+start(airmiles)
+end(airmiles)
+frequency(airmiles)
+summary(airmiles)
+```
+Así mismo, observamos la tendecia y los ciclos.
+
+```{r}
+plot(airmiles)
+abline(reg=lm(airmiles~time(airmiles)))
+cycle(airmiles)
+plot(aggregate(airmiles,FUN=mean))
+boxplot(airmiles~cycle(airmiles))
+```
+
+En un intento de visualizar mejor los datos, usamos la función logaritmo (continua) y graficamos de nuevo los datos. 
+
+```{r}
+plot(log(airmiles),ylab='log(airmiles)',xlab='Año', main='Logaritmo de Millas aéreas')
+```
+
+Observamos,a  otra escala, la tendencia y la estacionalidad.  Aplicamos el método Holt Winters, el cual permite combinar esta tendencia y también la estacionalidad. Para visualizar esto, se puede generar un modelo con la función HoltWinters.
+
+### <span style="color:#FF7F00">**Modelo Holt-Winters**
+
+```{r}
+modelo_HW=HoltWinters(log(airmiles), seasonal = "additive")
+plot(modelo_HW, main='Ajuste con Holt-Winters',xlab='Año',ylab='log(airmiles)')
+```
+
+Se puede observar que R a través de HoltWinters crea una gráfica en color rojo, en donde se crean una nueva serie de datos que en teoría están muy cerca de los datos originales que son los de color negro. 
+
+Ahora bien, hay que tener en cuenta que la serie se debe descomponer de acuerdo a las caraceterísticas:
+
+```{r}
+plot(fitted(modelo_HW), main='Descomposición con HW',xlab='Año',ylab='log(airmiles)')
+```
+
+Algo muy importante que se puede realizar con la serie de tiempo y el método Holt Winters es **predecir**, para ello generamos lo siguiente:
+
+
+```{r}
+pred=predict(modelo_HW, 4, prediction.interval = TRUE)
+pred
+```
+
+
+Se observa que nos realiza una predicción para los próximos cuatro trimestres del siguiente año que en este caso, sería 2016. Para gráficar esta predicción realizamos lo siguiente:
+
+```{r}
+plot(modelo_HW,pred)
+```
+
+De esta manera se pueden visualizar en la gráfica la tendencia de los valores pronosticados para el año 2016, con sus respectivos intervalos de confianza.
+
+## <span style="color:#FF7F00">**Suavizamiento Exponencial**
+
+La función SES Suavizado Exponencial Simple, de la librería forecast, es un tipo de promedio ponderado que estima el valor futuro en función del pronóstico anterior más un porcentaje del error pronosticado.
+
+Definimos la variable $Fit_ses$ para aplicar la función de $ses$ con un $\alpha=0.1$. Se obtiene el pronóstico para $12$ y los intervalos de predicción. El pronóstico es de $17.64331$ con los respectivos intervalos de predicción Lo (Bajo) y Hi (Alto)
+
+```{r}
+library(forecast)
+fit_ses1<-ses(log(airmiles),h=1, initial ="simple", alpha=0.1)
+fit_ses1
+summary(fit_ses1)
+plot(fit_ses1)
+```
+
+Ahora, con otro valor de $\alpha=0.7$
+
+```{r}
+fit_ses2<-ses(log(airmiles),h=1, initial ="simple", alpha=0.7)
+fit_ses2
+summary(fit_ses2)
+plot(fit_ses2)
+```
+
+```{r}
+fit_ses3<-ses(log(airmiles),h=1, initial ="simple", alpha=0.9)
+fit_ses3
+summary(fit_ses3)
+plot(fit_ses3)
+```
+
+Lo mejor, es correr el modelo mediante un valor $\alpha$ automático que considera el menor error en las métricas de exactitud en el pronóstico (simplemente no se define el parámetro $\alpha$)
+
+```{r}
+fit_ses<-ses(log(airmiles),h=1, initial ="simple")
+fit_ses
+summary(fit_ses)
+plot(fit_ses)
+```
+
+
+
+
+## <span style="color:#FF7F00">**Promedio móvil**
+
+```{r}
+library(TTR)
+lairmiles=log(airmiles)
+
+sm<-SMA(lairmiles, n = 10) # media móvil simple
+
+EMA(lairmiles, n = 10, wilder = FALSE, ratio = NULL) # exponencial
+
+DEMA(lairmiles, n = 10, v = 1, wilder = FALSE, ratio = NULL) # exponencial doble
+
+#WMA(lairmiles, n = 10, wts = 1:n) #(linear weighting) Ponderada
+
+#EVWMA(lairmiles, volume, n = 10) #Promedio movil elastico ponderado por volumen
+
+HMA(lairmiles, n = 20) # Hull moving average
+
+ALMA(lairmiles, n = 9, offset = 0.85, sigma = 6) #Arnaud Legoux moving average
+
+ZLEMA(lairmiles, n = 10, ratio = NULL) #Zero lag exponential moving average.
+
+#VWAP(lairmiles, volume, n = 10)#Volume-weighed moving average
+
+#VMA(lairmiles, w, ratio = 1)
+
+```
+
+

@@ -1,0 +1,46 @@
+---
+title: <span style="color:#FF7F00">**¿Aún Holt Winter?**
+author: " "
+date: " "
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+c2="FF7F00" #color naranja-primario
+c1="034a94" #color azul oscuro-secundario
+c3="0EB0C6" #color azul claro-terciario
+c4="-686868" #color gris-texto
+```
+
+<div style="text-align: justify"> 
+
+## <span style="color:#034a94"> **Método de Holt Winter en series de tiempo**
+
+El análisis de series temporales es el campo más utilizado de la ciencia de datos y el aprendizaje estadístico/automático, ya que descompone los datos históricos para representar la tendencia, la estacionalidad y el ruido, y a través de estas, se pueden derivar las tendencias futuras. 
+
+Es un tipo de análisis predictivo que pronostica el valor de una variable en eventos futuros basados en su historial. Los valores pronosticados pueden estar influenciados por ciertos factores externos que se conocen como variables independientes, como en el caso de la venta de un producto la cual está influenciada por el porcentaje de descuento en sus precios o la temperatura en un día en particular está influenciada por la humedad o la velocidad del viento, etc. 
+
+Hay una serie de algoritmos de pronóstico de series temporales disponibles para un científico de datos, pero la elección del algoritmo depende de los problemas comerciales y el conjunto de datos en cuestión. Desde técnicas simples de pronóstico de series de tiempo como promedio móvil, suavizado exponencial, ARIMA, entre otros,  hasta métodos de pronóstico de aprendizaje profundo como redes neuronales recurrentes, memoria a corto plazo, XGBoost, etc.  También se utilizan técnicas de pronóstico híbridas que combinan los nuevos enfoques y se han mejorado para obtener resultados de pronóstico más precisos. 
+
+## <span style="color:#034a94"> **¿Qué es el método de Holt Winter?**
+
+Los datos del mundo real, como los datos de demanda en cualquier industria, generalmente tienen mucha **estacionalidad** y **tendencias**. Cuando se pronostican las demandas en tales casos, se requieren modelos que tengan en cuenta la tendencia y la estacionalidad de los datos, ya que la decisión que tome la empresa se basará en el resultado de este modelo. Para tales casos, el método de Holt Winter es uno de los muchos métodos de predicción de series de tiempo que se pueden usar para pronosticar.
+
+El suavizado exponencial de Holt-Winter, llamado así por sus dos colaboradores: Charles Holt y Peter Winter, es una de las técnicas de análisis de series de tiempo más antiguas que tiene en cuenta la tendencia y la estacionalidad al hacer el pronóstico. Este método tiene 3 aspectos principales para realizar las predicciones. Tiene un valor medio con la tendencia y la estacionalidad. Los tres aspectos son 3 tipos de suavizado exponencial y, por lo tanto, el método de Holt Winter también se conoce como suavizado exponencial triple.
+
+# <span style="color:#0EB0C6"> **Limitaciones de la técnica de Holt-Winter**
+
+A pesar de dar el mejor resultado de pronóstico, el método de Holt-Winter todavía tiene ciertas deficiencias. Una limitación importante de este algoritmo es la característica multiplicativa de la estacionalidad. El tema de la estacionalidad multiplicativa es cómo se comporta el modelo cuando tenemos marcos de tiempo con montos muy bajos. Un período de tiempo con un punto de datos de 10 o 1 puede tener una diferencia real de 9, pero hay una diferencia relativa de alrededor del 1000%, por lo que la estacionalidad, que se expresa como un término relativo, podría cambiar drásticamente y debe tenerse en cuenta, cuando se construye el modelo.
+
+## <span style="color:#034a94"> **Conclusión**
+
+El algoritmo de Holt Winter tiene amplias áreas de aplicación. Se utiliza en varios problemas comerciales principalmente por dos razones, una de las cuales es su enfoque de implementación simple y la otra es que el modelo evolucionará a medida que cambien nuestros requisitos comerciales.
+
+El modelo de series temporales de Holt Winter es un algoritmo de predicción muy poderoso a pesar de ser uno de los modelos más simples. Puede manejar la estacionalidad en el conjunto de datos simplemente calculando el valor central y luego sumándolo o multiplicándolo por la pendiente y la estacionalidad. Solo tenemos que asegurarnos de ajustar el conjunto correcto de parámetros, y viola, tenemos el mejor ajuste. modelo. 
+
+Recuerde siempre verificar la eficiencia del modelo utilizando el valor MAPE (error porcentual absoluto medio) o el valor RMSE (error cuadrático medio), y la precisión puede depender del problema comercial y el conjunto de datos disponible para entrenar y probar el modelo. 
+
+
+</div>

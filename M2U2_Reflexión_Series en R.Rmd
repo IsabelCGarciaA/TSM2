@@ -1,0 +1,99 @@
+---
+title: <span style="color:#034a94">**Series en TSA**
+author: " "
+date: " "
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+c1="034a94" #color naranja-primario
+c2="FF7F00" #color azul oscuro-secundario
+c3="0EB0C6" #color azul claro-terciario
+c4="-686868" #color gris-texto
+```
+
+## <span style="color:#FF7F00"> **Datos en TSA**
+
+Este conjunto de datos, pertenece al paquete TS <https://cran.r-project.org/web/packages/TSA/TSA.pdf>.
+Este paquete de R, contiene funciones y conjuntos de datos relacionados en el libro "Time Series Analysis with Applications in R (second edition)" by J.D. Cryer and K.S. Chan.
+
+A continuación, retomamos el conjunto de datos airmiles: Monthly Airline Passenger-Miles en US. La ventana de observación está entre 01/1996 - 05/2005, pero ahora queremos ajustar un modelo ARIMA. 
+
+```{r}
+library(TSA)
+data("airmiles")
+View(airmiles)
+plot(airmiles)
+str(airmiles)
+```
+
+Verificamos catacterísticas básicas de los datos.
+
+```{r}
+class(airmiles)
+start(airmiles)
+end(airmiles)
+frequency(airmiles)
+summary(airmiles)
+```
+Así mismo, observamos la tendencia y los ciclos.
+
+```{r}
+plot(airmiles)
+abline(reg=lm(airmiles~time(airmiles)))
+cycle(airmiles)
+plot(aggregate(airmiles,FUN=mean))
+boxplot(airmiles~cycle(airmiles))
+```
+
+
+En un intento de quitar la estacionalidad, a través de la función logaritmo, graficamos de nuevo los datos. 
+
+```{r}
+plot(log(airmiles),main="Datos",xlab="Año",ylab="log(airmiles)")
+grid()
+```
+
+Procedemos a transformar nuestra serie, para que sea estacionaria, haciendo uso de la función adf.  
+
+```{r}
+library(aTSA)
+adf.test(diff(log(airmiles)))
+```
+
+Ajustamos 
+
+```{r}
+library(forecast)
+modelo<-auto.arima(diff(log(airmiles)))
+
+```
+
+```{r}
+pronostico<- forecast(modelo,12,level=95)
+plot(pronostico,main="Pronóstico con auto.arima",xlab="Año",ylab="log(airmiles)")
+grid()
+```
+
+```{r}
+residuales<-modelo$residuals
+qqnorm(residuales)
+qqline(residuales)
+shapiro.test(residuales)
+
+```
+
+
+```{r}
+Box.test(residuales,type = "Ljung-Box")
+```
+Box.test() otra importante función que nos permite
+realizar contrantes de Box-Pierce y Ljung-Box para
+refutar si los residuos son un ruido blanco.
+
+
+

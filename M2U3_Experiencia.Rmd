@@ -1,0 +1,80 @@
+---
+title: <span style="color:#FF7F00">**Algoritmo Prophet**
+author: " "
+date: " "
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+
+c2="FF7F00" #color naranja-primario
+c1="034a94" #color azul oscuro-secundario
+c3="0EB0C6" #color azul claro-terciario
+c4="-686868" #color gris-texto
+```
+
+# <span style="color:#034a94">**Modelo Prophet**
+
+Una propuesta reciente es el modelo Prophet, disponible a través del paquete fable.prophet. Este modelo fue introducido por Facebook (S. J. Taylor & Letham, 2018), originalmente para pronosticar datos diarios con estacionalidad semanal y anual, además de efectos de vacaciones. Más tarde se amplió para cubrir más tipos de datos estacionales. Funciona mejor con series temporales que tienen una fuerte estacionalidad y varias temporadas de datos históricos.
+
+Prophet puede considerarse un modelo de regresión no lineal de la forma 
+
+$$y_{t}=g(t)+s(t)+h(t)+\epsilon_{t},$$
+donde $g(t)$ denota la tendencia lineal, $s(t)$ los comportamientos estacionales, $h(t)$ captura los efectos de las vacaciones y $\epsilon_{t}$ es el ruido blanco.
+
+
+
+# <span style="color:#034a94">**Consideraciones**
+
+- Los nodos (o puntos de cambio) para la tendencia lineal por tramos se seleccionan automáticamente si no se especifican explícitamente. Opcionalmente, se puede usar una función logística para establecer un límite superior en la tendencia.
+
+- El componente estacional consiste en términos de Fourier de los períodos relevantes. De forma predeterminada, el orden $10$ se usa para la estacionalidad anual y el orden $3$ se usa para la estacionalidad semanal.
+
+- Los efectos de vacaciones se agregan como variables ficticias simples.
+
+- El modelo se estima utilizando un enfoque bayesiano para permitir la selección automática de los puntos de cambio y otras características del modelo.
+
+A continuación, mostramos este enfoque utilizando un conjunto de datos.
+
+
+
+# <span style="color:#FF7F00">**Comparación con ARIMA y ETS**
+
+```{r}
+library(fable)
+library(fabletools)
+library(fable.prophet)
+library(tsibble)
+library(fpp3)
+
+cement <- aus_production %>%
+  filter(year(Quarter) >= 1988)
+train <- cement %>%
+  filter(year(Quarter) <= 2007)
+fit <- train %>%
+  model(
+    arima = ARIMA(Cement),
+    ets = ETS(Cement),
+    prophet = prophet(Cement ~ season(period = 4, order = 2,
+                                    type = "multiplicative"))
+  )
+```
+
+
+# <span style="color:#FF7F00">**Pronóstico de los tres modelos**
+
+
+```{r}
+fc <- fit %>% forecast(h = "2 years 6 months")
+fc %>% autoplot(cement)
+
+```
+
+
+# <span style="color:#FF7F00">**¿Cuál es el mejor modelo?**
+
+```{r}
+fc %>% accuracy(cement)
+```
+

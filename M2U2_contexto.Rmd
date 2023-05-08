@@ -1,0 +1,208 @@
+
+---
+title: "Ejemplo COLCAP"
+author: "Isabel García"
+date: "4/11/2021"
+output: html_document
+---
+  
+  
+```{r}
+library(forecast)
+library(tseries)
+library(timsac)
+library(ggplot2)
+library(changepoint)
+library(readxl)
+```
+
+Acá están guardados mis datos, se debe dar importar dataset en file.
+
+```{r}
+library(readxl)
+Datos<- read_excel("C:/Users/isabel.garcia/OneDrive - PUJ Cali/Desktop/Todo 6.10/Diseño_Borrador/Diseño/Modulo 2/Unidad 2/Insumos/1.Contexto/COLCAP.xlsx")
+```
+
+Mis datos tenían muchas columnas, pero solo quería de la Datos$COLCAP y convertimos los datos a formato de serie de tiempo, inica el día 84 del año 2019. 
+
+```{r} 
+Indice.ts<-ts(Datos$COLCAP, start = c(2019,84), frequency = 365)
+(Indice.ts)
+```
+
+Graficamos la serie 
+
+```{r}
+plot(Indice.ts)
+#Revisamos que si sea de la clase ts (serie de tiempo): innecesario
+class(Indice.ts)
+#Corroboramos el inicio de la serie:  innecesario
+start(Indice.ts)
+#Corroboramos el final de la serie:  innecesario
+end(Indice.ts)
+#Estabilizar la varianza (no tiene mucho sentido en este caso)
+#tra1<-log(Indice.ts)
+#plot(tra1)
+```
+
+
+Verificamos que sea ESTACIONARIA (Dicker-Fuller 'adf.test'), si no lo es... entonces no podemos pronosticar más adelante
+
+```{r}
+adf.test(Indice.ts,, alternative = c("stationary", "explosive"))
+```
+
+Si el valor $p$ es menor que $0.05$ es estacionaria, en este caso **no es estacionaria**, verificamos cuantas veces debemos diferenciar para tener la estacionariedad
+
+```{r}
+ndiffs(Indice.ts)
+```
+Como nos indica que $1$, así que diferenciamos una vez y la llamamos dif.Indice.ts
+
+```{r}
+dif.Indice.ts<-diff(Indice.ts)
+#la graficamos
+plot(dif.Indice.ts, main=" ", ylab="valor", col="deepskyblue", xlab="Años")
+title(main="DIF Precios del índice COLCAP")
+```
+
+volvemos a mirar si es estacionaria y nos sale que sí
+
+```{r}
+adf<-adf.test(dif.Indice.ts)
+adf
+```
+
+## Funciones acf y pacf
+```{r}
+library(ggplot2)
+ACF<-acf(dif.Indice.ts)
+PACF<-pacf(dif.Indice.ts)
+autoplot(stl(dif.Indice.ts, s.window = "periodic"), ts.colour = "blue")
+```
+
+¿Cuál es el modelo de ajuste?, en este caso, la función, nos indica que es $ARIMA(2,1,4)$
+
+```{r}
+modelo<-auto.arima(dif.Indice.ts)
+modelo
+```
+
+### ahora le pedimos los puntos de cambio de la serie a R.  La función se llama cpt.mean y detecta un punto de cambio en la media
+
+```{r}
+mval<-cpt.mean(dif.Indice.ts,method = "AMOC") 
+cpts(mval)
+```
+
+### gráfica del cambio pero se ve muy pequeño se le debe hacer zoom
+```{r}
+plot(mval, type = "l", cpt.col = "blue", xlab = "Value", cpt.width = 4, main = "default penalty")
+```
+
+#ahora predecimos, los siguientes 12 días, pero uno puede predecir cuantos uno quiera
+
+```{r}
+pred<-forecast(dif.Indice.ts,h=12)
+pred
+```
+
+```{r}
+plot(pred, main=" ", ylab="valor", col="deepskyblue", xlab="Años")
+title(main="Predicción DIF Precios del índice COLCAP")
+#observacion, recuerde que este es el valor predicho de la diferencia
+```
+
+
+
+### con esta otra libreria, se pude hacer validación 
+
+```{r}
+library("tsoutliers")
+dat.ts<- ts(dif.Indice.ts,frequency=1)
+data.ts.outliers <- tso(dat.ts)
+data.ts.outliers
+plot(data.ts.outliers)
+```
+
+
+## Revisar los supuestos arima
+
+### media cero d elos residuos
+
+Primero vamos a ver si la media de los residuos es cero, aplicamos la prueba t.test para evaluar 
+
+```{r}
+mr<-modelo$residuals # estos son los residuos del modelo
+t.test(mr, alternative='two.sided',
+       conf.level=0.95, mu=0)
+```
+
+Como el valor-P es 0.6855 y mayor que el nivel de significancia 5%, no se rechaza la hipótesis nula, es decir, que la media de los residuos es cero.
+
+### independencia d elos residuos 
+
+Segundo vamos a evaluar la  independencia d elos residuos 
+
+
+```{r}
+independencia <- Box.test(mr, type="Ljung-Box") # Test de Ljung-Box
+independencia$p.value
+```
+
+son independienets
+
+### distribucion
+
+
+primero ver si se ajustan graficamente a una normal (deberían quedar todos los puntos sobre la linea, pero esto sólo es visual) pero si es una distribución simétrica
+
+```{r}
+
+qqnorm(mr, col = "blue")
+qqline(mr, col = "red")
+```
+
+así que sigue mirar a traves de uan prueba, shapiro y tampoco es normal pero esa no es una condición absolutamente necesaria. Al final coloco porqué...
+
+
+```{r}
+shapiro.test(mr)
+```
+
+```{r}
+library(car)
+qqPlot(mr)
+```
+
+Se busca cual es la distribución de ajuste y se intenta la t-distribution ya que es la más parecida visualmente
+
+```{r}
+library(fitdistrplus)
+library(moments)
+library(MASS)
+library(fGarch)
+summary(mr)
+skewness(mr)
+kurtosis(mr)
+ec<-ecdf(mr)
+plot(ec)
+hist(mr)
+mr<-as.numeric(mr)
+#descdist(mr)
+stdFit(mr)
+
+#ajust<-fitdistr(mr, "t", start = list(m=mean(mr),s=sd(mr), df=2.2), lower=c(-1, 0.001,1))
+#summary(ajust)
+#(ajust$estimate)
+length(mr)
+```
+
+y ahora vuelve y se genera una funcion de distribucion empirica que sirve para ver si se se ajuta la t-student
+
+```{r}
+x <- seq( -100, 100, by = 0.01)
+ed<-ecdf(rt(x,df=2.2))
+plot(ed)
+
+```
